@@ -320,18 +320,11 @@ where
 // Parts of the Merkle tree showing have been adapted from
 // https://github.com/kilic/bellman-playground by Onur Kilic
 
-trait AllocatedMember<E: JubjubEngine>: Clone {
-    fn as_vec<CS: ConstraintSystem<E>>(
-        &self,
-        cs: CS,
-    ) -> Result<Vec<AllocatedNum<E>>, SynthesisError>;
-}
-
 trait GenericMerkleHasher<E: JubjubEngine>: Clone {
     fn hash_to_leaf<CS: ConstraintSystem<E>>(
         &self,
         cs: CS,
-        raw: Vec<AllocatedNum<E>>,
+        raw: &[AllocatedNum<E>],
     ) -> Result<AllocatedNum<E>, SynthesisError>;
 
     fn hash_couple<CS: ConstraintSystem<E>>(
@@ -359,10 +352,10 @@ where
     fn hash_to_leaf<CS: ConstraintSystem<E>>(
         &self,
         mut cs: CS,
-        raw: Vec<AllocatedNum<E>>,
+        raw: &[AllocatedNum<E>],
     ) -> Result<AllocatedNum<E>, SynthesisError> {
         self.hasher
-            .allocate_hash(cs.namespace(|| "hash_to_leaf"), raw.as_slice())
+            .allocate_hash(cs.namespace(|| "hash_to_leaf"), raw)
     }
     fn hash_couple<CS: ConstraintSystem<E>>(
         &self,
@@ -391,11 +384,11 @@ where
     E: JubjubEngine,
     H: GenericMerkleHasher<E>,
 {
-    pub fn alloc<CS: ConstraintSystem<E>, M: AllocatedMember<E>>(
+    pub fn alloc<CS: ConstraintSystem<E>>(
         mut cs: CS,
         hasher: H,
         root: Option<E::Fr>,
-        member: M,
+        member: AllocatedNum<E>,
         witness: Vec<Option<(E::Fr, bool)>>,
     ) -> Result<Self, SynthesisError> {
         let root = AllocatedNum::alloc(cs.namespace(|| "root"), || Ok(*root.get()?))?;
@@ -413,8 +406,7 @@ where
                 AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.0))?;
             allocated_witness.push((path_element, position));
         }
-        let ser = member.as_vec(cs.namespace(|| "raw member"))?;
-        let leaf = hasher.hash_to_leaf(cs.namespace(|| "hash to leaf"), ser)?;
+        let leaf = hasher.hash_to_leaf(cs.namespace(|| "hash to leaf"), &[member])?;
         Ok(Self {
             hasher,
             leaf,
@@ -453,23 +445,6 @@ where
             |lc| lc + self.root.get_variable(),
         );
         Ok(())
-    }
-}
-
-#[derive(Clone)]
-struct SingleAllocatedMember<E: JubjubEngine> {
-    m: AllocatedNum<E>,
-}
-
-impl<E> AllocatedMember<E> for SingleAllocatedMember<E>
-where
-    E: JubjubEngine,
-{
-    fn as_vec<CS: ConstraintSystem<E>>(
-        &self,
-        _cs: CS,
-    ) -> Result<Vec<AllocatedNum<E>>, SynthesisError> {
-        Ok(vec![self.m.clone()])
     }
 }
 
@@ -592,9 +567,7 @@ where
                 hasher: self.hasher1.clone(),
             },
             self.merkle_tree_root,
-            SingleAllocatedMember {
-                m: revocation_id[0].clone(),
-            },
+            revocation_id[0].clone(),
             self.merkle_tree_witnesses,
         )?;
         membership_circuit.check_inclusion(cs.namespace(|| "check inclusion"))?;
