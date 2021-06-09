@@ -1,0 +1,17 @@
+[package]
+name = "ppeid-bench"
+version = "0.1.0"
+edition = "2018"
+
+[profile.release]
+lto = true
+
+[dependencies]
+rand = "0.4"
+sapling-crypto = { package = "sapling-crypto_ce", git = "https://github.com/alex-ozdemir/sapling-crypto", branch = "bls12-poseidon" }
+bignat = { package = "bellman-bignat", git = "https://github.com/alex-ozdemir/bellman-bignat", version = "0.1.0" }
+streaming-stats = "0.2"
+structopt = "0.3"
+csv = "1.1"
+serde = { version = "1", features = ["derive"]}
+itertools = "0.10"
