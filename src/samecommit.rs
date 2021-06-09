@@ -19,7 +19,7 @@ use super::utils::{MerkleTree, RngHelpers};
 fn bytes_to_inputs<E: JubjubEngine>(inputs: &[u8], max_length: usize) -> Vec<E::Fr> {
     assert!(inputs.len() <= max_length);
 
-    let mut image = multipack::bytes_to_bits_le(&inputs);
+    let mut image = multipack::bytes_to_bits_le(inputs);
     // pad to max_length
     while image.len() < 8 * max_length {
         image.push(false)
@@ -646,19 +646,18 @@ where
                 let identifier = rng.random_string(IDENTIFIER_LENGTH, IDENTIFIER_LENGTH);
                 let date_of_birth = rng.random_birthday();
 
-                let all_attributes = [
+                let input2: Vec<E::Fr> = [
                     &given_name,
                     &family_name,
                     &identifier,
                     &date_of_birth,
-                    &revocation_id,
-                ];
-                let input2: Vec<E::Fr> = all_attributes
-                    .iter()
-                    .zip(ATTR_LENGTH.iter())
-                    .map(|(value, max_length)| bytes_to_inputs::<E>(value.as_bytes(), *max_length))
-                    .flatten()
-                    .collect();
+                    revocation_id,
+                ]
+                .iter()
+                .zip(ATTR_LENGTH.iter())
+                .map(|(value, max_length)| bytes_to_inputs::<E>(value.as_bytes(), *max_length))
+                .flatten()
+                .collect();
 
                 let output2 = self.hasher2.hash(&input2);
                 let instance = ShowingCircuit {
@@ -667,7 +666,7 @@ where
                     identifier: Some(identifier),
                     date_of_birth: Some(date_of_birth),
                     revocation_id: Some(revocation_id.clone()),
-                    priv_attrs: priv_attrs,
+                    priv_attrs,
                     merkle_tree_root: Some(self.merkle_tree.root()),
                     merkle_tree_witnesses: self
                         .merkle_tree
