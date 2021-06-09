@@ -14,4 +14,3 @@ streaming-stats = "0.2"
 structopt = "0.3"
 csv = "1.1"
 serde = { version = "1", features = ["derive"]}
-itertools = "0.10"
