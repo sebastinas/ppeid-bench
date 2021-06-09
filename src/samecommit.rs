@@ -300,14 +300,12 @@ where
             // create the actual proof
             let start_proof = Instant::now();
             let proof = create_random_proof(circuit, &circuit_parameters, &mut rng).unwrap();
-            let proof_duration = Instant::now().duration_since(start_proof);
-            proof_stats.push(proof_duration.as_micros());
+            proof_stats.push(Instant::now().duration_since(start_proof).as_micros());
 
             // verify the proof
             let start_verify = Instant::now();
             let is_valid = verify_proof(&verifing_key, &proof, &public_inputs).unwrap();
-            let verify_duration = Instant::now().duration_since(start_verify);
-            verify_stats.push(verify_duration.as_micros());
+            verify_stats.push(Instant::now().duration_since(start_verify).as_micros());
 
             assert!(is_valid);
         }
@@ -689,14 +687,12 @@ where
             // create the actual proof
             let start_proof = Instant::now();
             let proof = create_random_proof(circuit, &circuit_parameters, &mut rng).unwrap();
-            let proof_duration = Instant::now().duration_since(start_proof);
-            proof_stats.push(proof_duration.as_micros());
+            proof_stats.push(Instant::now().duration_since(start_proof).as_micros());
 
             // verify the proof
             let start_verify = Instant::now();
             let is_valid = verify_proof(&verifing_key, &proof, &public_inputs).unwrap();
-            let verify_duration = Instant::now().duration_since(start_verify);
-            verify_stats.push(verify_duration.as_micros());
+            verify_stats.push(Instant::now().duration_since(start_verify).as_micros());
 
             assert!(is_valid);
         }
